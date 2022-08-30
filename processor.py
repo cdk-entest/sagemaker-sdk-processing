@@ -23,7 +23,7 @@ else:
 # input and output path
 data_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/house_pricing.csv"
 code_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/process-data.py"
-data_output_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/"
+data_output_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing"
 # upload processing script to s3
 session.upload_data(
     bucket=os.environ["BUCKET_NAME"],
@@ -70,11 +70,11 @@ def test_base_processor(image_url):
         inputs=[
            ProcessingInput(
             source=data_input_path,
-            destination="/opt/ml/processing/input/",
+            destination="/opt/ml/processing/data/",
            ),
            ProcessingInput(
             source=code_input_path,
-            destination="/opt/ml/processing/data/"
+            destination="/opt/ml/processing/input/"
            )
         ],
         outputs=[
