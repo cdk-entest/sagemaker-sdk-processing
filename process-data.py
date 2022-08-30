@@ -3,12 +3,11 @@ haimtran
 process data script
 """
 import os
-from pickle import FALSE
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 # 
-SAGEMAKER_TRAINING = FALSE
+SAGEMAKER_TRAINING = True
 # local data path
 if SAGEMAKER_TRAINING: 
     # input data

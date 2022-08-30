@@ -29,6 +29,12 @@ session.upload_data(
     key_prefix=f"pca-processing",
     path="process-data.py"
 )
+# upload data to s3 
+session.upload_data(
+    bucket=os.environ['BUCKET_NAME'],
+    key_prefix=f"pca-processing",
+    path="./data/house_pricing.csv"
+)
 
 # retrieve aws docker image url for processing data
 def retriev_image_url():
