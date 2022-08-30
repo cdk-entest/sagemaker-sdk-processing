@@ -1,5 +1,8 @@
 """
-haimtran sagemaker.processing.Processor
+haimtran test different sagemaker processors.
+1. sagemaker.processing.Processor
+2. SklearnProcessor 
+3. ScriptProcessor
 28 aug 2022
 """
 import json
@@ -10,7 +13,7 @@ from sagemaker.processing import Processor, ScriptProcessor, ProcessingInput, Pr
 from sagemaker.sklearn.processing import SKLearnProcessor
 from sagemaker.session import Session
 
-# sagemaker session 
+# sagemaker session
 session = Session()
 # environment variable
 if 'ROLE' in os.environ and 'BUCKET_NAME' in os.environ:
