@@ -21,8 +21,8 @@ else:
         os.environ['ROLE'] = config['ROLE']
         os.environ["BUCKET_NAME"] = config["BUCKET"]
 # input and output path
-data_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/house_pricsing.csv"
-code_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/process-data.py" 
+data_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/house_pricing.csv"
+code_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/process-data.py"
 data_output_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/"
 # upload processing script to s3
 session.upload_data(
