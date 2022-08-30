@@ -11,7 +11,7 @@ SAGEMAKER_TRAINING = True
 # local data path
 if SAGEMAKER_TRAINING: 
     # input data
-    local_data_path = "/opt/ml/processing/input/house_pricing.csv"
+    local_data_path = "/opt/ml/processing/data/house_pricing.csv"
     # output data
     processed_train_dir =  "/opt/ml/processing/output/train"
     os.makedirs(processed_train_dir, exist_ok=True)

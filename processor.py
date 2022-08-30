@@ -74,7 +74,7 @@ def test_base_processor(image_url):
            ),
            ProcessingInput(
             source=code_input_path,
-            destination="/opt/ml/processing/input/"
+            destination="/opt/ml/processing/data/"
            )
         ],
         outputs=[
