@@ -2,14 +2,16 @@
 haimtran
 process data script
 """
+import argparse
 import os
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-# 
-SAGEMAKER_TRAINING = True
+
+SAGEMAKER_TRAINING = True 
+
 # local data path
-if SAGEMAKER_TRAINING: 
+if SAGEMAKER_TRAINING:
     # input data
     local_data_path = "/opt/ml/processing/data/house_pricing.csv"
     # output data
@@ -30,6 +32,19 @@ else:
     processed_test_dir = os.path.join(os.getcwd(), "data/processed/test")
     os.makedirs(processed_test_dir, exist_ok=True)
 
+
+def read_parameters():
+    parser =  argparse.ArgumentParser()
+    parser.add_argument("--processor", type=str, default='based processor')
+    parser.add_argument("--sagemaker", type=bool, default=True)
+    params, _ = parser.parse_known_args()
+    return params
+
+#======================= parse parameters ==================
+args = read_parameters()
+print(args)
+
+#======================= load data =========================
 # load data
 df = pd.read_csv(local_data_path)
 print(df.head())
@@ -91,7 +106,8 @@ df_test_transformed = pd.DataFrame(
 df_test_transformed['PRICE'] = df_test['PRICE']
 print(df_test_transformed.head())
 #====================== save processed data ==================
-df_train_transformed.to_csv(processed_train_dir+"/train.csv", sep=',', index=False,header=False)
-df_test_transformed.to_csv(processed_test_dir+"/test.csv", sep=',', index=False, header=False)
-df_val_transformed.to_csv(processed_validation_dir+"/validation.csv", sep=',', index=False, header=False)
+df_train_transformed.to_csv(f"{processed_train_dir}/{args.processor}-train.csv", sep=',', index=False,header=False)
+df_test_transformed.to_csv(f"{processed_test_dir}/{args.processor}-test.csv", sep=',', index=False, header=False)
+df_val_transformed.to_csv(f"{processed_validation_dir}/{args.processor}-validation.csv", sep=',', index=False, header=False)
+
 
