@@ -1,43 +1,52 @@
 """
 haimtran test different sagemaker processors.
 1. sagemaker.processing.Processor
-2. SklearnProcessor 
+2. SklearnProcessor
 3. ScriptProcessor
 28 aug 2022
 """
 import json
 import os
 from time import strftime
+import concurrent.futures
 from sagemaker import image_uris
-from sagemaker.processing import Processor, ScriptProcessor, ProcessingInput, ProcessingOutput
+from sagemaker.processing import (
+    Processor,
+    ScriptProcessor,
+    ProcessingInput,
+    ProcessingOutput,
+)
 from sagemaker.sklearn.processing import SKLearnProcessor
 from sagemaker.session import Session
 
 # sagemaker session
 session = Session()
 # environment variable
-if 'ROLE' in os.environ and 'BUCKET_NAME' in os.environ:
+if "ROLE" in os.environ and "BUCKET_NAME" in os.environ:
     pass
 else:
     with open("config.json", "r", encoding="utf-8") as file:
         config = json.load(file)
-        os.environ['ROLE'] = config['ROLE']
+        os.environ["ROLE"] = config["ROLE"]
         os.environ["BUCKET_NAME"] = config["BUCKET"]
 # input and output path
 data_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/house_pricing.csv"
-code_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/process-data.py"
+code_input_path = (
+    f"s3://{os.environ['BUCKET_NAME']}/pca-processing/process-data.py"
+)
 data_output_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing"
+container_base_path = "/opt/ml/processing"
 # upload processing script to s3
 session.upload_data(
     bucket=os.environ["BUCKET_NAME"],
     key_prefix=f"pca-processing",
-    path="process-data.py"
+    path="process-data.py",
 )
-# upload data to s3 
+# upload data to s3
 session.upload_data(
-    bucket=os.environ['BUCKET_NAME'],
+    bucket=os.environ["BUCKET_NAME"],
     key_prefix=f"pca-processing",
-    path="./data/house_pricing.csv"
+    path="./data/house_pricing.csv",
 )
 
 # retrieve aws docker image url for processing data
@@ -49,9 +58,10 @@ def retriev_image_url():
         framework="sklearn",
         version="0.23-1",
         region="us-east-1",
-        image_scope="training"
+        image_scope="training",
     )
     return image_url
+
 
 # sagemaker base processor
 def test_base_processor(image_url):
@@ -64,42 +74,47 @@ def test_base_processor(image_url):
         role=os.environ["ROLE"],
         image_uri=image_url,
         instance_count=1,
-        instance_type='ml.m4.xlarge',
-        entrypoint=['python', '/opt/ml/processing/input/process-data.py', '--processor=base-processor']
+        instance_type="ml.m4.xlarge",
+        entrypoint=[
+            "python",
+            f"{container_base_path}/input/process-data.py",
+            "--processor=base-processor",
+        ],
     )
 
     processor.run(
         job_name=f'processor-{strftime("%Y-%m-%d-%H-%M-%S")}',
         inputs=[
-           ProcessingInput(
-            source=data_input_path,
-            destination="/opt/ml/processing/data/",
-           ),
-           ProcessingInput(
-            source=code_input_path,
-            destination="/opt/ml/processing/input/"
-           )
+            ProcessingInput(
+                source=data_input_path,
+                destination=f"{container_base_path}/data/",
+            ),
+            ProcessingInput(
+                source=code_input_path,
+                destination=f"{container_base_path}/input/",
+            ),
         ],
         outputs=[
             ProcessingOutput(
-                source="/opt/ml/processing/output/train",
+                source=f"{container_base_path}/output/train",
                 destination=f"{data_output_path}/train",
-                output_name="train"
+                output_name="train",
             ),
             ProcessingOutput(
-                source="/opt/ml/processing/output/test",
+                source=f"{container_base_path}/output/test",
                 destination=f"{data_output_path}/test",
-                output_name="test"
+                output_name="test",
             ),
             ProcessingOutput(
-                source="/opt/ml/processing/output/validation",
+                source=f"{container_base_path}/output/validation",
                 destination=f"{data_output_path}/validation",
-                output_name="validation"
-            )
+                output_name="validation",
+            ),
         ],
     )
 
-# handle amazon processing tasks for jobs using ml frameworks 
+
+# handle amazon processing tasks for jobs using ml frameworks
 # provide a script to be run as part of the processing job
 def test_script_processor(image_url: str):
     """
@@ -107,44 +122,47 @@ def test_script_processor(image_url: str):
     """
 
     script_processor = ScriptProcessor(
-        role=os.environ['ROLE'],
+        role=os.environ["ROLE"],
         image_uri=image_url,
         instance_count=1,
-        instance_type='ml.m4.xlarge',
-        command=['python3'],
+        instance_type="ml.m4.xlarge",
+        command=["python3"],
+        env={"PROCESSOR": "script-processor"},
     )
 
     script_processor.run(
         job_name=f'script-processor-{strftime("%Y-%m-%d-%H-%M-%S")}',
-        code='process-data.py',
+        code="process-data.py",
         inputs=[
-           ProcessingInput(
-            source=data_input_path,
-            destination="/opt/ml/processing/data/",
-           ),
-           ProcessingInput(
-            source=code_input_path,
-            destination="/opt/ml/processing/input/"
-           )
+            ProcessingInput(
+                source=data_input_path,
+                # process-data.py needs to know data here
+                destination=f"{container_base_path}/data/",
+            ),
+            ProcessingInput(
+                source=code_input_path,
+                destination=f"{container_base_path}/input/",
+            ),
         ],
         outputs=[
             ProcessingOutput(
-                source="/opt/ml/processing/output/train",
+                source=f"{container_base_path}/output/train",
                 destination=f"{data_output_path}/train",
-                output_name="train"
+                output_name="train",
             ),
             ProcessingOutput(
-                source="/opt/ml/processing/output/test",
+                source=f"{container_base_path}/output/test",
                 destination=f"{data_output_path}/test",
-                output_name="test"
+                output_name="test",
             ),
             ProcessingOutput(
-                source="/opt/ml/processing/output/validation",
+                source=f"{container_base_path}/output/validation",
                 destination=f"{data_output_path}/validation",
-                output_name="validation"
-            )
+                output_name="validation",
+            ),
         ],
     )
+
 
 # sklearn processor
 def test_sklearn_processor():
@@ -153,19 +171,52 @@ def test_sklearn_processor():
     """
 
     sklearn_processor = SKLearnProcessor(
-        framework_version='sklearn_preprocessing.py',
-        role='',
-        instance_count=1, 
-        instance_type='ml.m4.xlarge',
+        framework_version="0.20.0",
+        role=os.environ["ROLE"],
+        instance_count=1,
+        instance_type="ml.m4.xlarge",
+        env={"PROCESSOR": "sklearn-processor"},
     )
     sklearn_processor.run(
-        code='',
-        inputs=[],
-        outputs=[],
+        job_name=f'sklearn-processor-{strftime("%Y-%m-%d-%H-%M-%S")}',
+        code="process-data.py",
+        inputs=[
+            ProcessingInput(
+                source=data_input_path,
+                # process-data.py needs to know data located here
+                destination=f"{container_base_path}/data/",
+            ),
+            ProcessingInput(
+                source=code_input_path,
+                destination=f"{container_base_path}/input/",
+            ),
+        ],
+        outputs=[
+            ProcessingOutput(
+                source=f"{container_base_path}/output/train",
+                destination=f"{data_output_path}/train",
+                output_name="train",
+            ),
+            ProcessingOutput(
+                source=f"{container_base_path}/output/test",
+                destination=f"{data_output_path}/test",
+                output_name="test",
+            ),
+            ProcessingOutput(
+                source=f"{container_base_path}/output/validation",
+                destination=f"{data_output_path}/validation",
+                output_name="validation",
+            ),
+        ],
     )
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     image_url = retriev_image_url()
     # test_base_processor(image_url=image_url)
-    test_script_processor(image_url=image_url)
+    # test_script_processor(image_url=image_url)
+    # test_sklearn_processor()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.submit(test_base_processor, image_url)
+        executor.submit(test_script_processor, image_url)
+        executor.submit(test_sklearn_processor)

@@ -8,18 +8,20 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+# path 
+container_base_path = "/opt/ml/processing"
+# training mode
 SAGEMAKER_TRAINING = True 
-
 # local data path
 if SAGEMAKER_TRAINING:
     # input data
-    local_data_path = "/opt/ml/processing/data/house_pricing.csv"
+    local_data_path = f"{container_base_path}/data/house_pricing.csv"
     # output data
-    processed_train_dir =  "/opt/ml/processing/output/train"
+    processed_train_dir =  f"{container_base_path}/output/train"
     os.makedirs(processed_train_dir, exist_ok=True)
-    processed_validation_dir =  "/opt/ml/processing/output/validation"
+    processed_validation_dir =  f"{container_base_path}/output/validation"
     os.makedirs(processed_validation_dir, exist_ok=True)
-    processed_test_dir =  "/opt/ml/processing/output/test"
+    processed_test_dir =  f"{container_base_path}/output/test"
     os.makedirs(processed_test_dir, exist_ok=True)
 else: 
     # input data
@@ -43,6 +45,10 @@ def read_parameters():
 #======================= parse parameters ==================
 args = read_parameters()
 print(args)
+if 'PROCESSOR' in os.environ:
+    pass
+else:
+    os.environ['PROCESSOR'] = args.processor
 
 #======================= load data =========================
 # load data
@@ -106,8 +112,8 @@ df_test_transformed = pd.DataFrame(
 df_test_transformed['PRICE'] = df_test['PRICE']
 print(df_test_transformed.head())
 #====================== save processed data ==================
-df_train_transformed.to_csv(f"{processed_train_dir}/{args.processor}-train.csv", sep=',', index=False,header=False)
-df_test_transformed.to_csv(f"{processed_test_dir}/{args.processor}-test.csv", sep=',', index=False, header=False)
-df_val_transformed.to_csv(f"{processed_validation_dir}/{args.processor}-validation.csv", sep=',', index=False, header=False)
+df_train_transformed.to_csv(f"{processed_train_dir}/{os.environ['PROCESSOR']}-train.csv", sep=',', index=False,header=False)
+df_test_transformed.to_csv(f"{processed_test_dir}/{os.environ['PROCESSOR']}-test.csv", sep=',', index=False, header=False)
+df_val_transformed.to_csv(f"{processed_validation_dir}/{os.environ['PROCESSOR']}-validation.csv", sep=',', index=False, header=False)
 
 
