@@ -1,5 +1,13 @@
+---
+title: Api Gateway Socket
+description: Just show a simple setup with api gateway socket
+author: haimtran
+publishedDate: 08/14/2022
+date: 2022-08-14
+---
+
 ## Introduction
-SageMaker SDK provides different way to launch a processing job 
+SageMaker SDK provides different way to launch a processing job.
 - Base Prodessor 
 - Script Processor 
 - Sklearn Processor 
@@ -9,6 +17,12 @@ we need to
 - Provide your processing code or event your own container 
 - Provide data, save, download data from to a s3 bucket 
 
+<LinkedImage
+  href="https://youtu.be/1CRBSPiGQ9Y"
+  height={400}
+  alt="SageMaker Processing Api"
+  src="/thumbnail/sagemaker-processing-api.png"
+/>
 
 ## Base processor
 the key here is the entrypoint where you put your command to run the code 
