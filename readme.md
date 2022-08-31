@@ -7,30 +7,35 @@ date: 2022-08-14
 ---
 
 ## Introduction
-SageMaker SDK provides different way to launch a processing job.
-- Base Prodessor 
-- Script Processor 
-- Sklearn Processor 
 
-we need to 
+[GitHub](https://github.com/entest-hai/sagemaker-sdk-processing) this show an example how to use different processsors provided by SageMaker API.
+
+- Base Processor
+- Script Processor
+- Sklearn Processor
+
+We need to
+
 - Choose container either by image url or framework version
-- Provide your processing code or event your own container 
-- Provide data, save, download data from to a s3 bucket 
+- Provide your processing code or event your own container
+- Provide data, save, download data from to a s3 bucket
 
 <LinkedImage
   href="https://youtu.be/1CRBSPiGQ9Y"
   height={400}
   alt="SageMaker Processing Api"
-  src="/thumbnail/sagemaker-processing-api.png"
+  src="/thumbnail/sg-processing-api.png"
 />
 
 ## Base processor
-the key here is the entrypoint where you put your command to run the code 
+
+the key here is the entrypoint where you put your command to run the code
+
 ```py
 processor = Processor(
     role=os.environ['ROLE'],
     image_uri=image_url,
-    instance_count=1, 
+    instance_count=1,
     instance_type='ml.m4.xlarge',
     entrypoint=["python", f"{container_base_path}/input/process-data.py",
     "--processor=base-processor"]
@@ -68,8 +73,11 @@ processor.run(
 )
 
 ```
+
 ## Script Processor
+
 different from the base professor a) command to run code should be python3 and b) the running code is specified in the run method
+
 ```py
 script_processor = ScriptProcessor(
     role=os.environ["ROLE"],
@@ -115,7 +123,9 @@ script_processor.run(
 ```
 
 ## Sklearn Processor
-there is no entrypoint or command here, the code is specified in the run method 
+
+there is no entrypoint or command here, the code is specified in the run method
+
 ```py
 sklearn_processor = SKLearnProcessor(
     framework_version="0.20.0",
