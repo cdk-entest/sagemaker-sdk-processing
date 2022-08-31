@@ -8,7 +8,7 @@ date: 2022-08-14
 
 ## Introduction
 
-[GitHub](https://github.com/entest-hai/sagemaker-sdk-processing) this show an example how to use different processsors provided by SageMaker API.
+[GitHub](https://github.com/entest-hai/sagemaker-sdk-processing) this show how to use different processsors provided by SageMaker API.
 
 - Base Processor
 - Script Processor
