@@ -17,6 +17,7 @@ from sagemaker.processing import (
     ProcessingOutput,
 )
 from sagemaker.sklearn.processing import SKLearnProcessor
+from sagemaker.spark.processing import PySparkProcessor
 from sagemaker.session import Session
 
 #============================== parameters =========================
@@ -40,6 +41,10 @@ code_input_path = (
 data_output_path = f"s3://{os.environ['BUCKET_NAME']}/processing-demo"
 # sagemaker container paths
 container_base_path = "/opt/ml/processing"
+# pyspark job input and output 
+source_bucket_name = "amazon-reviews-pds"
+dest_bucket_name = os.environ["BUCKET_NAME"]
+
 #============================== upload to s3 =========================
 # upload processing script to s3
 session.upload_data(
@@ -190,7 +195,7 @@ def test_sklearn_processor():
                 destination=f"{container_base_path}/data/",
                 # input mode either File or Pipe => change process-data code 
                 # to read directly from S3 
-                s3_input_mode="Pipe"
+                # s3_input_mode="Pipe"
             ),
             ProcessingInput(
                 source=code_input_path,
@@ -217,12 +222,40 @@ def test_sklearn_processor():
     )
 
 
+# test PySparkProcessor 
+def test_pyspark_processor():
+    """
+    PySparkProcessor
+    """
+    spark_processor = PySparkProcessor(
+    base_job_name="sm-spark",
+    framework_version="3.1",
+    role=os.environ["ROLE"],
+    instance_count=2,
+    instance_type="ml.m5.xlarge",
+    max_runtime_in_seconds=1200)
+
+    # run pyspark script 
+    spark_processor.run(
+    submit_app="./pyspark_process_data.py",
+    arguments=[
+        "--source_bucket_name",
+        source_bucket_name,
+        "--dest_bucket_name",
+        dest_bucket_name,
+    ],
+    logs=False) 
+
+
+
+
 if __name__ == "__main__":
     image_url = retriev_image_url(region="ap-southeast-1")
     # test_base_processor(image_url=image_url)
     # test_script_processor(image_url=image_url)
     # test_sklearn_processor()
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.submit(test_base_processor, image_url)
-        executor.submit(test_script_processor, image_url)
-        executor.submit(test_sklearn_processor)
+    test_pyspark_processor()
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     executor.submit(test_base_processor, image_url)
+    #     executor.submit(test_script_processor, image_url)
+    #     executor.submit(test_sklearn_processor)
