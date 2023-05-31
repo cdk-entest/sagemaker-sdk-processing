@@ -275,8 +275,6 @@ The actualy running command would be
 
 ## Reference
 
-- [Processing Container Input and Output]()
+- [Processing Container Input and Output](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html)
 
-- [File and Pipe Mode]()
-
-- [Command and EntryPoint]()
+- [File and Pipe Mode](https://aws.amazon.com/about-aws/whats-new/2021/10/amazon-sagemaker-fast-file-mode/)
