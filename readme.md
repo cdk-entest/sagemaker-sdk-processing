@@ -168,6 +168,33 @@ sklearn_processor.run(
 )
 ```
 
+## PySpark Processor
+
+For big data processing, we can use a PySparkProcessor
+
+```py
+    spark_processor = PySparkProcessor(
+    base_job_name="sm-spark",
+    framework_version="3.1",
+    role=os.environ["ROLE"],
+    instance_count=2,
+    instance_type="ml.m5.xlarge",
+    max_runtime_in_seconds=1200)
+
+    # run pyspark script
+    spark_processor.run(
+    submit_app="./pyspark_process_data.py",
+    arguments=[
+        "--source_bucket_name",
+        source_bucket_name,
+        "--dest_bucket_name",
+        dest_bucket_name,
+    ],
+    logs=False)
+```
+
+The [pyspark_process_data.py](https://github.com/cdk-entest/sagemaker-sdk-processing/blob/main/pyspark_process_data.py) script just simple read data from S3 using Spark DataFrame, performan some transform, then write to a S3 destination. Please note that this job would take about 10 minutes.
+
 ## Pipe Mode
 
 Processing job support two modes for accessing data from S3
@@ -187,9 +214,9 @@ ProcessingInput(
 ),
 ```
 
-The process data code udpated 
+The process data code udpated
 
-```py 
+```py
 TODO
 
 ```
