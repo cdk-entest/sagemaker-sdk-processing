@@ -19,9 +19,10 @@ from sagemaker.processing import (
 from sagemaker.sklearn.processing import SKLearnProcessor
 from sagemaker.session import Session
 
+#============================== parameters =========================
 # sagemaker session
 session = Session()
-# environment variable
+# environment variables
 if "ROLE" in os.environ and "BUCKET_NAME" in os.environ:
     pass
 else:
@@ -29,40 +30,42 @@ else:
         config = json.load(file)
         os.environ["ROLE"] = config["ROLE"]
         os.environ["BUCKET_NAME"] = config["BUCKET"]
-# input and output path
-data_input_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing/house_pricing.csv"
+# upload data to s3
+data_input_path = f"s3://{os.environ['BUCKET_NAME']}/processing-demo/house_pricing.csv"
+# upload code to s3
 code_input_path = (
-    f"s3://{os.environ['BUCKET_NAME']}/pca-processing/process-data.py"
+    f"s3://{os.environ['BUCKET_NAME']}/processing-demo/process-data.py"
 )
-data_output_path = f"s3://{os.environ['BUCKET_NAME']}/pca-processing"
+# output data in s3
+data_output_path = f"s3://{os.environ['BUCKET_NAME']}/processing-demo"
+# sagemaker container paths
 container_base_path = "/opt/ml/processing"
+#============================== upload to s3 =========================
 # upload processing script to s3
 session.upload_data(
     bucket=os.environ["BUCKET_NAME"],
-    key_prefix=f"pca-processing",
+    key_prefix=f"processing-demo",
     path="process-data.py",
 )
 # upload data to s3
 session.upload_data(
     bucket=os.environ["BUCKET_NAME"],
-    key_prefix=f"pca-processing",
+    key_prefix=f"processing-demo",
     path="./data/house_pricing.csv",
 )
-
+#============================== processors =========================
 # retrieve aws docker image url for processing data
-def retriev_image_url():
+def retriev_image_url(region='us-east-1'):
     """
     get image url
     """
     image_url = image_uris.retrieve(
         framework="sklearn",
         version="0.23-1",
-        region="us-east-1",
+        region=region,
         image_scope="training",
     )
     return image_url
-
-
 # sagemaker base processor
 def test_base_processor(image_url):
     """
@@ -212,11 +215,11 @@ def test_sklearn_processor():
 
 
 if __name__ == "__main__":
-    image_url = retriev_image_url()
-    # test_base_processor(image_url=image_url)
+    image_url = retriev_image_url(region="ap-southeast-1")
+    test_base_processor(image_url=image_url)
     # test_script_processor(image_url=image_url)
     # test_sklearn_processor()
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.submit(test_base_processor, image_url)
-        executor.submit(test_script_processor, image_url)
-        executor.submit(test_sklearn_processor)
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     executor.submit(test_base_processor, image_url)
+    #     executor.submit(test_script_processor, image_url)
+    #     executor.submit(test_sklearn_processor)
