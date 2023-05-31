@@ -188,6 +188,9 @@ def test_sklearn_processor():
                 source=data_input_path,
                 # process-data.py needs to know data located here
                 destination=f"{container_base_path}/data/",
+                # input mode either File or Pipe => change process-data code 
+                # to read directly from S3 
+                s3_input_mode="Pipe"
             ),
             ProcessingInput(
                 source=code_input_path,
@@ -216,10 +219,10 @@ def test_sklearn_processor():
 
 if __name__ == "__main__":
     image_url = retriev_image_url(region="ap-southeast-1")
-    test_base_processor(image_url=image_url)
+    # test_base_processor(image_url=image_url)
     # test_script_processor(image_url=image_url)
     # test_sklearn_processor()
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     executor.submit(test_base_processor, image_url)
-    #     executor.submit(test_script_processor, image_url)
-    #     executor.submit(test_sklearn_processor)
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.submit(test_base_processor, image_url)
+        executor.submit(test_script_processor, image_url)
+        executor.submit(test_sklearn_processor)

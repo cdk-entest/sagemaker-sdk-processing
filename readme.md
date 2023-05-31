@@ -167,3 +167,89 @@ sklearn_processor.run(
     ],
 )
 ```
+
+## Pipe Mode
+
+Processing job support two modes for accessing data from S3
+
+- File Mode => data is downloaded from S3 to container
+- Pipe Mode => directly stream data from S3 => need code update
+
+For example
+
+```py
+ProcessingInput(
+  source=data_input_path,
+  # process-data.py needs to know data located here
+  destination=f"{container_base_path}/data/",
+  # Pipe mode to read directly from S3 => update process-data code
+  s3_input_mode="Pipe"
+),
+```
+
+The process data code udpated 
+
+```py 
+TODO
+
+```
+
+## Entrypoint and CMD
+
+According to Page 74 Getting Started with Containerization
+
+- ENTRYPOINT define the command ==> default /bin/sh -c
+- CMD define parameters for the command ==> then overwrite at run time
+
+For example, to run the following
+
+```bash
+ping 8.8.8.8 -c 3
+```
+
+We can configure ENTRYPOINT and CDM in a Dockerfile as the following
+
+```txt
+FROM alpine:latest
+ENTRYPOINT ["ping"]
+CMD ["8.8.8.8", "-c", "3"]
+```
+
+Build a pinger image
+
+```bash
+docker image build -t pinger .
+```
+
+Then we can over-write the three parameters at run time as the following
+
+```bash
+docker container run --rm -it pinger -w 5 127.0.0.1
+```
+
+It is possible to over-write the entrypoing
+
+```bash
+docker container run --rm -it --entrypoing /bin/sh pinger
+```
+
+Please note that the default entrypont is /bin/sh -c when we use only CMD
+
+```txt
+FROM alpine:latest
+CMD wget -O - http://www.google.com
+```
+
+The actualy running command would be
+
+```bash
+/bin/sh -c "wget -O - http://www.google.com"
+```
+
+## Reference
+
+- [Processing Container Input and Output]()
+
+- [File and Pipe Mode]()
+
+- [Command and EntryPoint]()
