@@ -1,6 +1,6 @@
 ---
-title: Api Gateway Socket
-description: Just show a simple setup with api gateway socket
+title: sagemaker processing job
+description: processing at scale with sagemaker processing job
 author: haimtran
 publishedDate: 08/14/2022
 date: 2022-08-14
@@ -8,7 +8,7 @@ date: 2022-08-14
 
 ## Introduction
 
-[GitHub](https://github.com/entest-hai/sagemaker-sdk-processing) this show how to use different processsors provided by SageMaker API.
+[GitHub](https://github.com/cdk-entest/sagemaker-sdk-processing) this show how to use different processsors provided by SageMaker API.
 
 - Base Processor
 - Script Processor
@@ -195,6 +195,115 @@ For big data processing, we can use a PySparkProcessor
 
 The [pyspark_process_data.py](https://github.com/cdk-entest/sagemaker-sdk-processing/blob/main/pyspark_process_data.py) script just simple read data from S3 using Spark DataFrame, performan some transform, then write to a S3 destination. Please note that this job would take about 10 minutes.
 
+## PCA Transform
+
+Let create a parallel sagemaker job with multiple instances to do PCA transform on ECG signal. First let create a processing script which perform PCA on an ECG numpy array
+
+```py
+import os
+import argparse
+from time import strftime
+import glob
+from datetime import datetime
+import pandas as pd
+from sklearn.decomposition import PCA
+import boto3
+
+# container base path
+container_base_path = "/opt/ml/processing"
+
+# output
+os.makedirs(f"{container_base_path}/output", exist_ok=True)
+
+def read_parameters():
+    parser =  argparse.ArgumentParser()
+    parser.add_argument("--bucket", type=str, default="")
+    params, _ = parser.parse_known_args()
+    return params
+
+# parse arguments
+args = read_parameters()
+
+# bucket name
+bucket = args.bucket
+
+# s3 client
+client = boto3.client("s3")
+
+# pca
+pca = PCA(n_components=4)
+
+# loop through all input data files
+for file in glob.glob(f"{container_base_path}/data/*.csv"):
+    # file name
+    file_name = file.split("/")[-1]
+    print(file)
+    # read data
+    df = pd.read_csv(file, usecols=[1, 2, 3, 4], dtype=float)
+    # remove nan
+    df.fillna(0.0, inplace=True)
+    # to array
+    ecg = df.values
+    # apply pca
+    pecg = pca.fit_transform(ecg)
+    # save result
+    pd.DataFrame(pecg).to_csv(f"{container_base_path}/output/pca_{file_name}", header=None, index=None)
+```
+
+Second create a sagemaker processing job using sklearn image
+
+```ts
+image_uri = image_uris.retrieve(
+  (region = "us-east-1"),
+  (framework = "sklearn"),
+  (version = "0.23-1")
+);
+```
+
+Create a sagemaker processing with instance count of 8 because the applied quota. Please check [S3DataDistributionType ](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ProcessingS3Input.html) to see how data files are distributed between instances.
+
+```ts
+processor = Processor(
+    role=role,
+    image_uri=image_uri,
+    # check service quota from console depending on instance type
+    instance_count=8,
+    instance_type="ml.m4.xlarge",
+    entrypoint=[
+        "python",
+        f"{container_base_path}/script/pca-ecg.py",
+        f"--bucket={bucket}",
+    ],
+)
+```
+
+Finally run the processing job
+
+```py
+# it takes about 5 minutes
+processor.run(
+    inputs=[
+        ProcessingInput(
+            source=data_input_path,
+            destination=f"{container_base_path}/data/",
+            s3_data_distribution_type="ShardedByS3Key",
+        ),
+        ProcessingInput(
+            source=code_input_path,
+            destination=f"{container_base_path}/script/",
+        ),
+    ],
+    outputs=[
+        ProcessingOutput(
+            source=f"{container_base_path}/output/",
+            destination=f"{data_output_path}",
+            output_name="data-pca",
+        )
+    ],
+    job_name=f'demo-{strftime("%Y-%m-%d-%H-%M-%S")}',
+)
+```
+
 ## Pipe Mode
 
 Processing job support two modes for accessing data from S3
@@ -278,3 +387,27 @@ The actualy running command would be
 - [Processing Container Input and Output](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html)
 
 - [File and Pipe Mode](https://aws.amazon.com/about-aws/whats-new/2021/10/amazon-sagemaker-fast-file-mode/)
+
+- [sagemaker session](https://sagemaker.readthedocs.io/en/stable/api/utility/session.html)
+
+- [sagemaker process data docs](https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html)
+
+- [sagemaker processing job sdk](https://sagemaker.readthedocs.io/en/stable/amazon_sagemaker_processing.html)
+
+- [sagemaker pipe mode](https://aws.amazon.com/blogs/machine-learning/using-pipe-input-mode-for-amazon-sagemaker-algorithms/)
+
+- [sagemaker spark job](https://sagemaker-examples.readthedocs.io/en/latest/sagemaker_processing/spark_distributed_data_processing/sagemaker-spark-processing.html)
+
+- [sagemaker distributed processing](https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/use-sagemaker-processing-for-distributed-feature-engineering-of-terabyte-scale-ml-datasets.html)
+
+- [S3DataDistributionType ](https://docs.aws.amazon.com/sagemaker/latest/APIReference/API_ProcessingS3Input.html)
+
+- [stackoverflow sagemaker distributed](https://stackoverflow.com/questions/68624368/distributed-processing-aws-sagemaker)
+
+- [s3fs docs](https://s3fs.readthedocs.io/en/latest/)
+
+- [timeout default 24 hours](https://sagemaker.readthedocs.io/en/stable/api/training/processing.html#sagemaker.processing.Processor)
+
+- [timeout limit](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html)
+
+- [service quota](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html)
