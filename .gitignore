@@ -3,3 +3,4 @@
 data/processed
 retrieve-image-url.py
 **.csv 
+.env 
