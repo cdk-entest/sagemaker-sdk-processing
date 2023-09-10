@@ -382,6 +382,33 @@ The actualy running command would be
 /bin/sh -c "wget -O - http://www.google.com"
 ```
 
+## Interative Plot
+
+To enable interactive plot in sagemaker studio, we need to install [ipympl](https://github.com/matplotlib/ipympl). First, go to the sagemaker studio consoler to install and activate sutdio env
+
+```bash
+conda activate studio
+```
+
+Second install extension
+
+```bash
+conda install -c conda-forge nodejs
+jupyter labextension install @jupyter-widgets/jupyterlab-manager jupyter-matplotlib
+```
+
+Third install the ipympl from notebook cell
+
+```bash
+pip install ipympl
+```
+
+Finally enable it in the notebook by magic cell
+
+```bash
+pip install ipympl
+```
+
 ## Reference
 
 - [Processing Container Input and Output](https://docs.aws.amazon.com/sagemaker/latest/dg/build-your-own-processing-container.html)
@@ -411,3 +438,5 @@ The actualy running command would be
 - [timeout limit](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html)
 
 - [service quota](https://docs.aws.amazon.com/general/latest/gr/sagemaker.html)
+
+- [ipympl](https://github.com/matplotlib/ipympl)
