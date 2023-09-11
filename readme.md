@@ -27,6 +27,14 @@ We need to
   src="/thumbnail/sg-processing-api.png"
 />
 
+Data Flow
+
+![sagmaker-processing-job-data-flow](/assets/sagemaker-processing-job-1.png)
+
+Container Input
+
+![sagemaker-processing-job-path](/assets/sagemaker-processing-job-2.png)
+
 ## Base processor
 
 the key here is the entrypoint where you put your command to run the code
@@ -76,7 +84,7 @@ processor.run(
 
 ## Script Processor
 
-different from the base professor a) command to run code should be python3 and b) the running code is specified in the run method
+Different from the base professor a) command to run code should be python3 and b) the running code is specified in the run method
 
 ```py
 script_processor = ScriptProcessor(
